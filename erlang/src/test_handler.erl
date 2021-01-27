@@ -33,13 +33,27 @@ content_types_provided(Req, State) ->
 
 content_types_accepted(Req, State) ->
 	io:format("Method: ~p~n",[cowboy_req:method(Req)]),
-	{[{<<"application/json">>, router}], Req, State}.
+	case cowboy_req:method(Req) of
+		<<"POST">> ->
+			{[{<<"application/json">>, test_post}], Req, State};
+		{<<"POST">>, _} ->
+			{[{<<"application/json">>, test_post}], Req, State};
+		{<<"PUT">>, _} ->
+			{[{<<"application/json">>, test_put}], Req, State}
+	end.
+
+	% {[
+	% 	{<<"application/json">>, router}
+	% ], Req, State}.
 
 router(Req, State) ->
+	io:format("Db to text opt: ~p~n",[State]),
 	case cowboy_req:method(Req) of
 		<<"POST">> ->
 			{<<"{\"status\": \"POST\"}">>, Req, State};
-		<<"PUT">> ->
+		{<<"POST">>, _} ->
+			{<<"{\"status\": \"POST2\"}">>, Req, State};
+		<<"PUT">> -> 
 			{<<"{\"status\": \"PUT\"}">>, Req, State};
 			% Accepted = {[{<<"application/json">>, test_put}], Req, State};		
 		<<"GET">> ->
@@ -55,7 +69,8 @@ test_get(Req, State) ->
 	<<"{\"rest\": \"Hello POST!\"}">>.
 
 test_post(Req, State) ->
-	<<"{\"rest\": \"Hello POST!\"}">>.
+	cowboy_req:reply(200, #{<<"content-type">> => <<"application/json; charset=utf-8">>}, <<"{\"status\": \"POST\"}">>, Req).
+	% <<"{\"rest\": \"Hello POST!\"}">>.
 
 test_put(Req, State) ->
 	<<"{\"rest\": \"Hello PUT!\"}">>.
